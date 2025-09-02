@@ -4,7 +4,7 @@ A timer-based game where users try to stop a timer at exactly 10 seconds.
 """
 
 import logging
-
+from datetime import datetime
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,7 +86,6 @@ async def root() -> dict[str, str]:
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint"""
-    from datetime import datetime
 
     return {
         "status": "healthy",
@@ -100,7 +99,7 @@ def start() -> None:
     """Start the server"""
     uvicorn.run(
         "app.main:app",  # Import string para habilitar reload
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=8000,
         reload=True,
         log_level="info",
