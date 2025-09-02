@@ -1,5 +1,6 @@
 """Game session API endpoints"""
 
+import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
@@ -18,11 +19,16 @@ from app.domain.value_objects.duration import Duration
 from app.infrastructure.database.connection import get_async_db
 from app.infrastructure.database.models import User
 from app.infrastructure.repositories.game_session_repository import GameSessionRepository
+from app.infrastructure.services.leaderboard_notification_service import (
+    LeaderboardNotificationService,
+)
 from app.presentation.schemas.game_schemas import (
     GameSessionResponse,
     StartGameResponse,
     StopGameResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -76,6 +82,7 @@ async def stop_game(
 ) -> StopGameResponse:
     """Stop a game session and calculate results"""
     try:
+        logger.info(f"Stopping game session {session_id} for user {current_user.id}")
         game_repository = GameSessionRepository(db)
         stop_game_use_case = StopGameUseCase(game_repository)
 
@@ -85,15 +92,56 @@ async def stop_game(
         target_duration = Duration.from_seconds(settings.target_time_ms / 1000)
         deviation = Deviation.from_durations(actual_duration, target_duration)
 
+        # Send leaderboard update notification if game was completed successfully
+        if session.is_completed and session.deviation_ms is not None:
+            try:
+                logger.info(f"Sending leaderboard update notification for session {session.id}")
+                notification_service = LeaderboardNotificationService(game_repository)
+
+                # Notify general leaderboard update
+                await notification_service.notify_leaderboard_update(current_user.id)
+
+                # Check if this is a new personal best or high score
+                logger.info(
+                    f"Checking if this is a new personal best or high score for user {current_user.id}"
+                )
+                user_sessions = await game_repository.get_by_user(current_user.id, limit=100)
+                completed_sessions = [
+                    s for s in user_sessions if s.is_completed and s.deviation_ms is not None
+                ]
+
+                if completed_sessions:
+                    # Filter out None values and get minimum deviation
+                    valid_deviations = [s.deviation_ms for s in completed_sessions if s.deviation_ms is not None]
+                    if valid_deviations:
+                        best_deviation = min(valid_deviations)
+                        if session.deviation_ms == best_deviation:
+                            # This is a new personal best, check if it's also a global high score
+                            logger.info(
+                                "This is a new personal best, checking if it's also a global high score"
+                            )
+                            leaderboard_data = await game_repository.get_leaderboard(limit=1)
+                            if (
+                                leaderboard_data
+                                and session.deviation_ms <= leaderboard_data[0]["best_deviation_ms"]
+                            ):
+                                await notification_service.notify_new_high_score(
+                                    current_user.id, current_user.username, session.deviation_ms
+                                )
+
+            except Exception as e:
+                # Log error but don't fail the game completion
+                logger.error(f"Error sending leaderboard notifications: {e}")
+
         # Create response message based on performance
         if deviation.is_perfect():
-            message = "🎯 PERFECT! Exactly 10 seconds!"
+            message = "PERFECT! Exactly 10 seconds!"
         elif deviation.is_excellent():
-            message = f"🌟 Excellent! Only {deviation.milliseconds}ms off target."
+            message = f"Excellent! Only {deviation.milliseconds}ms off target."
         elif deviation.is_good():
-            message = f"👍 Good timing! You were {deviation.milliseconds}ms off target."
+            message = f"Good timing! You were {deviation.milliseconds}ms off target."
         else:
-            message = f"⏱️ You were {deviation.milliseconds}ms off target. Try again!"
+            message = f"You were {deviation.milliseconds}ms off target. Try again!"
 
         return StopGameResponse(
             session_id=session.id,

@@ -1,5 +1,7 @@
 """Leaderboard API endpoints"""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +12,8 @@ from app.infrastructure.repositories.game_session_repository import GameSessionR
 from app.presentation.schemas.game_schemas import LeaderboardEntry, LeaderboardResponse
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -29,6 +33,7 @@ async def get_leaderboard(
 ) -> LeaderboardResponse:
     """Get leaderboard with top players"""
     try:
+        logger.info(f"Getting leaderboard with limit: {limit}")
         game_repository = GameSessionRepository(db)
         leaderboard_use_case = GetLeaderboardUseCase(game_repository)
 
@@ -53,6 +58,7 @@ async def get_leaderboard(
                     accuracy_percentage=round(accuracy_percentage, 2),
                 )
             )
+        print(f"len(Enhanced entries: {len(enhanced_entries)}")
 
         return LeaderboardResponse(
             leaderboard=enhanced_entries, total_entries=len(enhanced_entries)

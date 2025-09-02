@@ -25,6 +25,7 @@ SQLite with async support via SQLAlchemy 2.0 and aiosqlite.
 - **User Authentication**: Register/login with JWT tokens
 - **Game Sessions**: Start/stop timer game with accuracy scoring
 - **Leaderboard**: Rankings by average deviation from 10-second target
+- **Real-time Updates**: WebSocket notifications for live leaderboard changes
 - **User Analytics**: Personal statistics and game history
 
 ## Quick Start
@@ -81,6 +82,7 @@ cp env.example .env
 - **Auth**: `/auth/register`, `/auth/login`, `/auth/profile`
 - **Game**: `/games/start`, `/games/{id}/stop`, `/games/history`
 - **Leaderboard**: `/leaderboard`
+- **WebSocket**: `/ws/leaderboard` (live updates), `/ws/connections/status`
 - **Analytics**: `analytics/user/{user_id}`, `/analytics/me`
 
 ### Development Tools

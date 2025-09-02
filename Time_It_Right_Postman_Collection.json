@@ -1,0 +1,646 @@
+{
+  "info": {
+    "name": "Time It Right - Game API",
+    "description": "Complete API collection for Time It Right timer game with WebSocket support",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏠 Health Check",
+      "item": [
+        {
+          "name": "Root Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Basic root endpoint to verify API is running"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check endpoint with timestamp and version info"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('user_id', response.data.user_id);",
+                  "    pm.test('User registered successfully', function () {",
+                  "        pm.expect(response.message).to.eql('User registered successfully');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_player\",\n  \"email\": \"test@example.com\",\n  \"password\": \"securepass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account"
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.access_token);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "    pm.test('Login successful', function () {",
+                  "        pm.expect(response.token_type).to.eql('bearer');",
+                  "        pm.expect(response.access_token).to.be.a('string');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_player\",\n  \"password\": \"securepass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login and get JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Get current user profile information"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🎮 Game Sessions",
+      "item": [
+        {
+          "name": "Start Game",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('session_id', response.session_id);",
+                  "    pm.test('Game started successfully', function () {",
+                  "        pm.expect(response.target_time_ms).to.eql(10000);",
+                  "        pm.expect(response.session_id).to.be.a('number');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/start",
+              "host": ["{{base_url}}"],
+              "path": ["games", "start"]
+            },
+            "description": "Start a new timer game session"
+          },
+          "response": []
+        },
+        {
+          "name": "Stop Game",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.test('Game stopped successfully', function () {",
+                  "        pm.expect(response.duration_ms).to.be.a('number');",
+                  "        pm.expect(response.deviation_ms).to.be.a('number');",
+                  "        pm.expect(response.accuracy_score).to.be.a('number');",
+                  "        pm.expect(response.grade).to.be.a('string');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/{{session_id}}/stop",
+              "host": ["{{base_url}}"],
+              "path": ["games", "{{session_id}}", "stop"]
+            },
+            "description": "Stop the current game session and get results"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Game History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/history?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["games", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of games to retrieve (default: 10)"
+                }
+              ]
+            },
+            "description": "Get user's game session history"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Session",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/active",
+              "host": ["{{base_url}}"],
+              "path": ["games", "active"]
+            },
+            "description": "Get current user's active game session if any"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏆 Leaderboard",
+      "item": [
+        {
+          "name": "Get Leaderboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.test('Leaderboard retrieved successfully', function () {",
+                  "        pm.expect(response.leaderboard).to.be.an('array');",
+                  "        pm.expect(response.total_entries).to.be.a('number');",
+                  "    });",
+                  "    if (response.leaderboard.length > 0) {",
+                  "        pm.test('Leaderboard entries have correct structure', function () {",
+                  "            const entry = response.leaderboard[0];",
+                  "            pm.expect(entry).to.have.property('rank');",
+                  "            pm.expect(entry).to.have.property('username');",
+                  "            pm.expect(entry).to.have.property('avg_deviation_ms');",
+                  "            pm.expect(entry).to.have.property('accuracy_percentage');",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/leaderboard?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["leaderboard"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of top players to return (1-100)"
+                }
+              ]
+            },
+            "description": "Get top players ranked by average deviation"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔗 WebSocket",
+      "item": [
+        {
+          "name": "WebSocket Connection Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.test('WebSocket status retrieved successfully', function () {",
+                  "        pm.expect(response).to.have.property('leaderboard_connections');",
+                  "        pm.expect(response).to.have.property('total_connections');",
+                  "        pm.expect(response).to.have.property('connection_types');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ws/connections/status",
+              "host": ["{{base_url}}"],
+              "path": ["ws", "connections", "status"]
+            },
+            "description": "Get current WebSocket connection status and statistics"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Analytics",
+      "item": [
+        {
+          "name": "Get My Analytics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/me",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "me"]
+            },
+            "description": "Get current user's analytics and statistics"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Analytics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "user", "{{user_id}}"]
+            },
+            "description": "Get specific user's analytics (only own data allowed)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧪 Testing Scenarios",
+      "item": [
+        {
+          "name": "Complete Game Flow",
+          "item": [
+            {
+              "name": "1. Register Test User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('test_user_id', response.data.user_id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"test_flow_{{$randomAlphaNumeric}}\",\n  \"email\": \"test_{{$randomAlphaNumeric}}@example.com\",\n  \"password\": \"testflow123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "register"]
+                }
+              }
+            },
+            {
+              "name": "2. Login Test User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('test_jwt_token', response.access_token);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "// Use the username from the previous register request",
+                      "const registerBody = JSON.parse(pm.collectionVariables.get('register_body') || '{}');",
+                      "pm.collectionVariables.set('test_username', registerBody.username || 'test_flow_user');"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"testflow123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              }
+            },
+            {
+              "name": "3. Start Game",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('test_session_id', response.session_id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{test_jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/start",
+                  "host": ["{{base_url}}"],
+                  "path": ["games", "start"]
+                }
+              }
+            },
+            {
+              "name": "4. Stop Game",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{test_jwt_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/{{test_session_id}}/stop",
+                  "host": ["{{base_url}}"],
+                  "path": ["games", "{{test_session_id}}", "stop"]
+                }
+              }
+            },
+            {
+              "name": "5. Check Updated Leaderboard",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/leaderboard",
+                  "host": ["{{base_url}}"],
+                  "path": ["leaderboard"]
+                }
+              }
+            },
+            {
+              "name": "6. Check WebSocket Status",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ws/connections/status",
+                  "host": ["{{base_url}}"],
+                  "path": ["ws", "connections", "status"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

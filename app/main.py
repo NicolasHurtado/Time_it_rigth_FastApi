@@ -3,6 +3,8 @@
 A timer-based game where users try to stop a timer at exactly 10 seconds.
 """
 
+import logging
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,10 +17,24 @@ from app.presentation.api.analytics import router as analytics_router
 from app.presentation.api.auth import router as auth_router
 from app.presentation.api.games import router as games_router
 from app.presentation.api.leaderboard import router as leaderboard_router
+from app.presentation.api.websockets import router as websockets_router
 
 
 def create_application() -> FastAPI:
     """Create and configure FastAPI application"""
+
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.StreamHandler(),  # Console output
+        ],
+    )
+
+    # Set specific loggers
+    logging.getLogger("app").setLevel(logging.INFO)
+    logging.getLogger("uvicorn").setLevel(logging.INFO)
 
     app = FastAPI(
         title=settings.app_name,
@@ -41,6 +57,7 @@ def create_application() -> FastAPI:
     app.include_router(games_router, prefix="/games", tags=["Game Sessions"])
     app.include_router(leaderboard_router, prefix="/leaderboard", tags=["Leaderboard"])
     app.include_router(analytics_router, prefix="/analytics", tags=["User Analytics"])
+    app.include_router(websockets_router, prefix="/ws", tags=["WebSocket Connections"])
 
     return app
 
