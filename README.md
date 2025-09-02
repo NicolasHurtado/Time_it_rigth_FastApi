@@ -37,7 +37,7 @@ SQLite with async support via SQLAlchemy 2.0 and aiosqlite.
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/NicolasHurtado/Time_it_rigth_FastApi.git
 cd time_it_rigth
 ```
 
