@@ -26,7 +26,7 @@ async def test_health_check() -> None:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["app"] == "Time It Right2"  # From updated .env
+        assert data["app"] == "Time It Right"  # From updated .env
         assert data["version"] == "0.1.0"
         assert "timestamp" in data
 
@@ -46,4 +46,4 @@ async def test_openapi_json() -> None:
         response = await client.get("/openapi.json")
         assert response.status_code == 200
         data = response.json()
-        assert data["info"]["title"] == "Time It Right2"
+        assert data["info"]["title"] == "Time It Right"

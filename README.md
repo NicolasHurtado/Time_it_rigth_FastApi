@@ -40,6 +40,20 @@ SQLite with async support via SQLAlchemy 2.0 and aiosqlite.
 # Clone repository
 git clone https://github.com/NicolasHurtado/Time_it_rigth_FastApi.git
 cd time_it_rigth
+# Set environment variables
+cp env.example .env
+# Edit .env with your SECRET_KEY
+```
+
+### With Docker
+
+```bash
+# Build the image
+docker build -t time-it-right .
+# Run the container
+docker run -p 8000:8000 --name time-it-right time-it-right
+#Enter the container
+docker exec -it time-it-right bash
 ```
 
 ### With Poetry
@@ -47,11 +61,6 @@ cd time_it_rigth
 ```bash
 # Install dependencies
 poetry install
-
-# Set environment variables
-cp env.example .env
-# Edit .env with your SECRET_KEY
-
 # Run development server
 poetry run start
 ```
@@ -75,6 +84,12 @@ pip install -r requirements.txt
 cp env.example .env
 # Edit .env with your SECRET_KEY
 
+```
+
+### API Documentation
+```bash
+# Open the documentation
+http://localhost:8000/docs
 ```
 
 ### API Endpoints
